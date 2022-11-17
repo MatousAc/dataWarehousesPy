@@ -1,0 +1,162 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={mongoDB GeoJSON queries},
+  pdfauthor={Ac Hybl},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{mongoDB GeoJSON queries}
+\author{Ac Hybl}
+\date{2022-10-26}
+
+\begin{document}
+\maketitle
+
+\hypertarget{data-import}{%
+\section{Data Import}\label{data-import}}
+
+first we import data either through the GUI or using this mongosh
+command
+
+\begin{verbatim}
+# general form
+mongoimport <path to file> -c=collectionName
+# I just used the GUI 
+\end{verbatim}
+
+\begin{figure}
+\centering
+\includegraphics{images/paste-52E3FF14.png}
+\caption{\includegraphics{images/paste-102CACA6.png}}
+\end{figure}
+
+\includegraphics{images/paste-0F1F2E0C.png}
+
+\hypertarget{geo-spacial-data-structuring}{%
+\section{Geo-spacial data
+structuring}\label{geo-spacial-data-structuring}}
+
+When I look at my earthquake documents after the import, we can see that
+there are \texttt{latitude} and \texttt{longitude} fields but not and
+GeoJSON structures such as \texttt{geometry} or \texttt{Point}. To do
+get this, we have to create a new field using mongoDB commands:
+
+\begin{verbatim}
+# what I had to do:
+db.earthquake.updateMany({}, [{$set: {location: {type: "Point", coordinates: ["$longitude", "$latitude"]}}}]);
+
+
+
+# break that down into a general use case ⬇
+db.collectionName.updateMany(
+  # first parameter is filter document:
+  {},
+  # I enter an enmpty document if I want to
+  # keep all documents in collection
+  
+  
+  # next, provide a list of updates:
+  [
+    {
+      $set: # update command (set|addfield|unset|etc.)
+      {
+        fieldName:
+        # the value is next. it can be of any supported type
+        "a value"
+      }
+    }
+  ]
+# close function call
+);
+
+
+
+# my use case
+db.collectionName.updateMany(
+  {},
+  [
+    {
+      $set: 
+      {
+        location: 
+        {
+          type: "Point", 
+          coordinates: ["$longitude", "$latitude"]
+        }
+      }
+    }
+  ]
+);
+\end{verbatim}
+
+After this, we have a location object for every earthquake document.
+
+\begin{verbatim}
+"location": {
+    "type": "Point",
+    "coordinates": [
+      -117.901,
+      36.168
+    ]
+  }
+\end{verbatim}
+
+\end{document}
