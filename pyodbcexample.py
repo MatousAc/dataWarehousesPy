@@ -24,7 +24,7 @@ cursor = cnxn.cursor()
 cursor.execute('SELECT * FROM instructor')
 
 for i in cursor:
-    print(i)
+  print(i)
     
 df = pd.read_sql_query('SELECT * FROM instructor', cnxn)
 
