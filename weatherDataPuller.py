@@ -16,10 +16,8 @@ def get_filenames_from_db():
   return list(weatherData.sauWeather.distinct('_id'))
 
 def load_data_to_db(filename, json_weather_data):
-  weatherData.sauWeather.insert_one({
-      '_id': filename,
-      'data': json_weather_data
-  })
+  json_weather_data["_id"] = filename
+  weatherData.sauWeather.insert_one(json_weather_data)
   print(filename)
 
 # Extract list of file names from website
